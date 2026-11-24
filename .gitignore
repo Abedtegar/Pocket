@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+sbc/.env
+sbc/data/
+sbc/dataset_raw/
+sbc/models/*.onnx
+sbc/models/*_ncnn_model/
+sbc/sounds/*.wav
+kamera esp32s3/include/secrets.h
+.pio/

@@ -1,0 +1,3 @@
+# /etc/sudoers.d/guardian-shutdown  (pasang dengan: sudo visudo -cf <file> lalu sudo install -m 440 ...)
+# Izinkan service guardian mematikan perangkat saat baterai < shutdown_pct.
+orangepi ALL=(root) NOPASSWD: /sbin/shutdown -h now

@@ -1,0 +1,19 @@
+[Unit]
+Description=Guardian pocket device
+After=network-online.target mosquitto.service
+Wants=network-online.target
+
+[Service]
+User=orangepi
+# akses GPIO, I2C, UART, audio
+SupplementaryGroups=gpio i2c dialout audio
+WorkingDirectory=/home/orangepi/guardian/sbc
+EnvironmentFile=/home/orangepi/guardian/sbc/.env
+ExecStart=/home/orangepi/guardian/sbc/.venv/bin/python -m guardian
+Restart=always
+RestartSec=3
+KillSignal=SIGTERM
+TimeoutStopSec=15
+
+[Install]
+WantedBy=multi-user.target

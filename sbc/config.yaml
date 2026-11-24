@@ -1,0 +1,161 @@
+# config.yaml — konfigurasi pocket device (tanpa rahasia; rahasia ada di .env)
+# Nilai bertanda VERIFIKASI harus dicek di Orange Pi Zero 2W sebelum dipakai.
+# Sebagian nilai (heart_rate, vision.conf, alerts, power ambang) bisa diubah dari web;
+# perubahan dari web disimpan di SQLite (tabel settings) dan menimpa nilai di file ini.
+
+timezone: Asia/Jakarta
+
+glasses:
+  stream_url: http://192.168.50.10:81/stream
+  offline_timeout_s: 15
+  startup_grace_s: 30      # jeda setelah boot sebelum "belum pernah online" dianggap offline
+
+mqtt:
+  enabled: true
+  host: 127.0.0.1
+  port: 1883
+  client_id: guardian-sbc
+
+vision:
+  enabled: true
+  backend: onnx            # onnx | ncnn (K2)
+  model: models/yolov5n_weapon.onnx   # untuk ncnn: folder berisi *.param + *.bin
+  ncnn_input: in0          # nama blob input NCNN (pnnx: in0, onnx2ncnn: images)
+  ncnn_output: out0        # nama blob output NCNN (pnnx: out0, onnx2ncnn: output)
+  arch: yolov5             # output [1, N, 5+C], NMS dilakukan sendiri
+  imgsz: 320
+  iou: 0.45
+  conf: 0.45
+  names: []                # nama kelas sesuai indeks model; kosong + 80 kelas = COCO
+  classes: [knife]         # kelas yang dianggap senjata (K13)
+  temporal_n: 3            # terdeteksi di 3
+  temporal_m: 5            # dari 5 frame terakhir
+  max_fps: 5
+  threads: 4
+
+camera:
+  active_preset: default
+  sensor:                  # lapis 1 (diteruskan ke ESP32 via glasses/camera/set)
+    framesize: QVGA
+    quality: 12
+    brightness: 0
+    contrast: 0
+    saturation: 0
+    sharpness: 0
+    awb: 1
+    wb_mode: 0
+    aec: 1
+    aec_value: 300
+    ae_level: 0
+    agc: 1
+    agc_gain: 0
+    gainceiling: 2
+    hmirror: 0
+    vflip: 0
+    lenc: 1
+    bpc: 0
+    wpc: 1
+    raw_gma: 1
+    dcw: 1
+  preprocess:              # lapis 2 (OpenCV di SBC sebelum YOLO)
+    enabled: true
+    rotate: 0              # 0 / 90 / 180 / 270
+    flip: none             # none / h / v
+    brightness: 0          # -100..100
+    contrast: 1.0          # 0.5..2.0
+    saturation: 1.0        # 0.0..2.0
+    gamma: 1.0             # 0.5..2.5
+    clahe: false
+    clahe_clip: 2.0
+    sharpen: 0.0           # 0..1
+    denoise: false
+    roi: null              # [x, y, w, h] fraksi 0-1, null = seluruh frame
+
+heart_rate:
+  high_bpm: 120            # K5: tebakan awal
+  low_bpm: 45
+  sustain_s: 10
+  require_finger: true
+
+gps:
+  enabled: true
+  port: /dev/ttyS5         # VERIFIKASI (K3)
+  baud: 9600
+  stale_s: 30
+
+panic:
+  enabled: true
+  gpio_chip: gpiochip0     # VERIFIKASI (K3)
+  line: 0                  # VERIFIKASI (K3)
+  debounce_ms: 50
+
+power:
+  enabled: true
+  i2c_bus: 3               # VERIFIKASI (ls /dev/i2c-*, i2cdetect)
+  address: 0x40
+  shunt_ohm: 0.1
+  max_current_a: 3.2
+  interval_s: 2
+  cells: 1                 # Li-ion 1S (K10)
+  capacity_mah: 0          # isi kapasitas baterai untuk estimasi sisa waktu (0 = tidak diketahui)
+  curve:                   # tegangan per sel -> persen (Li-ion)
+    - [4.20, 100]
+    - [3.85, 60]
+    - [3.70, 30]
+    - [3.50, 10]
+    - [3.30, 0]
+  low_pct: 20
+  critical_pct: 8
+  shutdown_pct: 5
+  shutdown_enabled: true   # false = hanya log, tidak benar-benar mematikan
+  shutdown_command: [sudo, /sbin/shutdown, -h, now]
+  fake_voltage: null       # isi angka (mis. 3.6) untuk uji tanpa INA219; shutdown jadi dry-run
+
+status_led:
+  enabled: true
+  gpio_chip: gpiochip0     # VERIFIKASI
+  lines: {r: 0, g: 0, b: 0}   # VERIFIKASI
+  active_low: true         # common anode
+
+alerts:
+  cooldown_s:
+    weapon: 60
+    hr_high: 120
+    hr_low: 120
+    zone_enter: 300
+    panic: 10
+    glasses_offline: 300
+    gps_lost: 300
+    battery_low: 600
+    battery_critical: 300
+
+telegram:
+  enabled: true            # butuh TELEGRAM_TOKEN dan TELEGRAM_CHAT_ID di .env
+  retry_interval_s: 30
+
+speaker:
+  enabled: true
+  device: plughw:1,0       # VERIFIKASI dengan aplay -l
+  sounds_dir: sounds
+
+network:
+  check_host: 1.1.1.1
+  check_port: 53
+  check_interval_s: 20
+
+storage:
+  db: data/guardian.db
+  snapshot_dir: data/snapshots
+  retention_days: 7        # K8
+
+recorder:
+  dir: dataset_raw
+  log_csv: dataset_raw/dataset_log.csv
+
+api:
+  host: 0.0.0.0
+  port: 8000
+  stream_max_fps: 5
+
+logging:
+  level: INFO
