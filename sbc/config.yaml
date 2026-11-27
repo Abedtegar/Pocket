@@ -26,8 +26,8 @@ vision:
   imgsz: 320
   iou: 0.45
   conf: 0.45
-  names: []                # nama kelas sesuai indeks model; kosong + 80 kelas = COCO
-  classes: [knife]         # kelas yang dianggap senjata (K13)
+  names: [senjata_tajam]   # nama kelas sesuai indeks model; untuk uji model COCO set [] (80 kelas otomatis)
+  classes: [senjata_tajam] # kelas yang dianggap senjata (K13: satu kelas gabungan; COCO: [knife])
   temporal_n: 3            # terdeteksi di 3
   temporal_m: 5            # dari 5 frame terakhir
   max_fps: 5

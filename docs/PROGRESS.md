@@ -9,17 +9,25 @@ dilakukan langsung di Orange Pi lewat SSH. Rencana lengkap ada di `../plan.md`, 
 
 | Bagian | Status | Teruji di mana |
 |---|---|---|
-| `sbc/` program pocket device (M4–M7b) | Kode lengkap | Laptop Windows: 16 unit test lulus + smoke test end-to-end dengan hardware dimatikan. **Belum pernah jalan di Orange Pi** |
-| `kamera esp32s3/` firmware kacamata (M1–M2) | Kode lengkap, `pio run` sukses (Flash 33 %, RAM 18 %) | Sudah ter-upload ke board, tersambung ke Wi-Fi modem `SAFE`. **Stream dan MQTT belum terverifikasi** (lihat 4.1) |
-| Model senjata (M8) | Belum mulai | – |
-| Jaringan (M3) | **Berubah dari plan**, lihat bagian 2 | Belum diuji |
+| `sbc/` program pocket device (M4–M7b) | Kode lengkap | Orange Pi (Arch Linux ARM): 16 unit test lulus. `python -m guardian` dengan kacamata asli **belum dicoba** |
+| `kamera esp32s3/` firmware kacamata (M1–M2) | Kode lengkap, fw 2.0.0 | **Terverifikasi 27-11-2026**: stream MJPEG tampil di browser, MQTT `online`/`hr`/`status`/`camera/state` diterima di Orange Pi |
+| Model senjata (M8) | **Tahap 1 disiapkan**: `model/train.ipynb` (Colab) + `model/README.md`. Belum ada dataset/training | – |
+| Jaringan (M3) | **Berubah dari plan**, lihat bagian 2 | **Berjalan**: Wi-Fi `SAFE`, mDNS `guardian.local` ↔ `guardian-glasses.local`, broker `0.0.0.0:1883` |
+
+### Hasil uji integrasi ESP ↔ Orange Pi (27-11-2026)
+- OS Orange Pi ternyata **Arch Linux ARM** (setup: `deploy/setup_arch.sh`, bukan `setup_pi.sh`). mDNS lewat
+  **systemd-resolved** (avahi tidak dipakai). Hostname diganti `teen-pc` → `guardian`.
+- Sensor kamera terdeteksi **OV3660** (bukan OV2640). `camera/state` cocok dengan `camera.sensor` di config.yaml, `errors` kosong.
+- Stream 15–28 fps QVGA (target M1 ≥ 10 fps terpenuhi). RSSI −44..−49 dBm, baterai kacamata ~3.96 V.
+- Heart rate: tanpa jari `ir` ≈ 1 000, menempel `ir` ≈ 101 000–103 000 (di bawah jenuh 250 000), bpm 77–96 stabil
+  setelah ±10 s. Saat jari baru ditempel `ir` sempat 50 014 (tepat di ambang 50 000) → `finger` bisa berkedip sesaat.
 
 ### Milestone (plan.md bagian 11)
 | # | Status |
 |---|---|
-| M0 Setup Orange Pi, SSH, Tailscale, venv, Mosquitto | **Berjalan**: SSH sudah ada. Jalankan `sbc/deploy/setup_pi.sh` |
-| M1 Firmware kamera MJPEG | Kode jadi; tinggal verifikasi ≥ 10 fps QVGA di browser |
-| M2 Firmware MAX30102 + MQTT + LWT + tuning | Kode jadi; butuh broker di Orange Pi untuk diuji |
+| M0 Setup Orange Pi, SSH, Tailscale, venv, Mosquitto | **Sebagian**: SSH, venv, Mosquitto, hostname `guardian` selesai. Sisa: Tailscale, `.env` |
+| M1 Firmware kamera MJPEG | **Selesai** (15–28 fps QVGA) |
+| M2 Firmware MAX30102 + MQTT + LWT + tuning | **Sebagian**: hr/status/online/camera/state jalan. Sisa: uji `camera/set` (+ error), LWT saat daya dicabut |
 | M3 Jaringan | Diganti: Wi-Fi modem + mDNS (bagian 2) |
 | M4 Ingest + LED + simulator | Kode jadi; perlu verifikasi pin dan hardware |
 | M5 Preprocess + YOLOv5n + benchmark | Kode jadi; perlu `yolov5n.onnx` COCO + `bench_detector.py` |
@@ -44,13 +52,17 @@ dilakukan langsung di Orange Pi lewat SSH. Rencana lengkap ada di `../plan.md`, 
 ### Keputusan terbuka yang sudah dijawab user
 - K1: YOLOv5n 320.
 - K2: ONNX Runtime default, NCNN opsional (`vision.backend`). Putuskan final setelah benchmark M5.
+- K13 (27-11-2026): **satu kelas `senjata_tajam`** untuk training; labeling primer tetap rinci. `config.yaml`
+  `vision.names/classes` sudah diset `[senjata_tajam]`.
+- K14 (sebagian, 27-11-2026): **tahap 1 data publik** (Roboflow + negatif COCO) di **Google Colab**, data primer
+  kacamata menyusul untuk fine-tune tahap 2. Target jumlah/jadwal 9A.5 dan 9A.11 belum ditetapkan.
 - K10: baterai pocket device **Li-ion 1S** (`power.cells: 1`), kurva 4.20=100, 3.85=60, 3.70=30, 3.50=10, 3.30=0.
 
 ### Keputusan yang masih terbuka (tanyakan user sebelum memutuskan)
 K3 pin UART/GPIO/I2C Orange Pi, K4 resolusi QVGA vs VGA, K5 ambang HR (sementara 120/45 bpm, sustain 10 s),
 K6 klip video, K7 isi suara (sementara beep placeholder dari `tools/make_sounds.py`), K8 retensi (sementara 7 hari),
 K9 rangkaian LED (sementara tabel 7.1b apa adanya), K11 posisi INA219, K12 preset kamera (hanya `default`),
-K13 kelas training (`vision.classes`), K14 target data.
+K14 target jumlah data dan jadwal pengambilan data primer.
 
 ---
 
@@ -85,7 +97,7 @@ Laptop tersambung ke Wi-Fi `SAFE`, buka `http://guardian-glasses.local:81/stream
 Sebelumnya stream timeout karena `STATIC_IP 192.168.50.10` tidak cocok dengan subnet modem. Sekarang sudah DHCP
 (`STATIC_IP ""`), perlu **upload ulang** firmware terbaru (dengan mDNS).
 
-### 4.2 Setup Orange Pi (M0)
+### 4.2 Setup Orange Pi (M0) — sudah dijalankan; OS ternyata Arch, pakai `deploy/setup_arch.sh`
 ```bash
 git clone https://github.com/Abedtegar/Pocket.git ~/guardian    # path dipakai systemd/guardian.service
 cd ~/guardian/sbc

@@ -6,6 +6,8 @@ Taruh model hasil ekspor di sini (tidak masuk git).
 - NCNN: folder berisi `*.param` + `*.bin` (set `vision.backend: ncnn`, `vision.model: models/<folder>`,
   dan sesuaikan `ncnn_input` / `ncnn_output` dengan nama blob hasil konversi)
 
+Model senjata dilatih lewat `../../model/train.ipynb` (panduan: `../../model/README.md`).
+
 ## Uji pipeline dengan model COCO (M5)
 Di PC/Colab:
 ```bash
@@ -17,6 +19,6 @@ Salin `yolov5n.onnx` ke `sbc/models/`, lalu di `config.yaml`:
 ```yaml
 vision:
   model: models/yolov5n.onnx
-  names: []          # 80 kelas -> nama COCO otomatis
+  names: []          # 80 kelas -> nama COCO otomatis (kembalikan ke [senjata_tajam] untuk model senjata)
   classes: [knife]   # atau [scissors, knife] untuk uji
 ```

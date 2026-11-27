@@ -28,21 +28,16 @@ sudo install -d -o mosquitto -g mosquitto -m 755 /var/lib/mosquitto
 # mosquitto.conf bawaan Arch tidak membaca conf.d
 grep -q '^include_dir /etc/mosquitto/conf.d' /etc/mosquitto/mosquitto.conf 2>/dev/null || \
   echo 'include_dir /etc/mosquitto/conf.d' | sudo tee -a /etc/mosquitto/mosquitto.conf >/dev/null
-{
-  echo "# dibuat oleh deploy/setup_arch.sh (sumber: deploy/mosquitto-guardian.conf)"
-  echo "listener 1883 127.0.0.1"
-  if ip -4 addr show | grep -q 'inet 192\.168\.50\.1/'; then
-    echo "listener 1883 192.168.50.1"
-  else
-    echo "# listener 1883 192.168.50.1   # AP belum aktif; aktifkan baris ini setelah wlan0 = 192.168.50.1"
-    echo "!! AP 192.168.50.1 belum ada: mosquitto hanya mendengar 127.0.0.1" >&2
-  fi
-  echo "allow_anonymous true"
-  echo "persistence true"
-  echo "persistence_location /var/lib/mosquitto/"
-} | sudo tee /etc/mosquitto/conf.d/guardian.conf >/dev/null
+# Jaringan Wi-Fi modem + mDNS (docs/PROGRESS.md bagian 2): broker mendengar di semua antarmuka.
+{ cat deploy/mosquitto-guardian.conf; echo "persistence_location /var/lib/mosquitto/"; } \
+  | sudo tee /etc/mosquitto/conf.d/guardian.conf >/dev/null
 sudo systemctl enable mosquitto
 sudo systemctl restart mosquitto
+
+echo "== hostname (mDNS guardian.local, dicari kacamata sebagai broker) =="
+# Arch memakai systemd-resolved untuk mDNS (avahi tidak diperlukan).
+[ "$(cat /etc/hostname 2>/dev/null)" = guardian ] || sudo hostnamectl set-hostname guardian
+sudo systemctl restart systemd-resolved
 
 echo "== venv + dependensi =="
 [ -x .venv/bin/python ] || python3 -m venv .venv

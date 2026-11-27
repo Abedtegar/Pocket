@@ -1,0 +1,8 @@
+# Definisi kelas training (K13: satu kelas gabungan, diputuskan 27-11-2026).
+# Labeling primer tetap rinci (plan 9A.2): pisau, celurit, parang_golok, gunting, lainnya_tajam.
+# Saat menggabungkan, semua indeks rinci dipetakan ke 0. Path diisi notebook (train.ipynb) sesuai lokasi data.
+path: dataset_s1
+train: train/images
+val: val/images
+nc: 1
+names: [senjata_tajam]
