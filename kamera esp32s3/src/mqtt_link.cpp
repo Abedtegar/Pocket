@@ -1,6 +1,7 @@
 #include "mqtt_link.h"
 
 #include <ArduinoJson.h>
+#include <ESPmDNS.h>
 #include <PubSubClient.h>
 #include <WiFi.h>
 
@@ -46,13 +47,42 @@ static void onMessage(char *topic, byte *payload, unsigned int len) {
   }
 }
 
-static bool connectMqtt() {
-  // LWT "0" retained QoS1: broker mengirimnya bila kacamata hilang tanpa disconnect.
-  if (!g_mqtt.connect(g_client_id, nullptr, nullptr, T_ONLINE, 1, true, "0", true)) {
-    Serial.printf("[mqtt] gagal connect ke %s:%d (rc=%d)\n", MQTT_HOST, MQTT_PORT, g_mqtt.state());
+// MQTT_HOST boleh berupa IP ("192.168.8.100"), nama mDNS ("guardian.local"), atau nama DNS biasa.
+static bool resolveBroker(IPAddress &ip) {
+  const char *h = MQTT_HOST;
+  if (ip.fromString(h)) return true;
+  size_t n = strlen(h);
+  if (n > 6 && !strcasecmp(h + n - 6, ".local")) {
+    String name(h);
+    name.remove(n - 6);  // queryHost() menerima nama tanpa ".local"
+    IPAddress r = MDNS.queryHost(name.c_str(), 2000);
+    if (r == IPAddress()) {
+      Serial.printf("[mqtt] %s tidak ditemukan lewat mDNS (Orange Pi mati / avahi belum jalan?)\n", h);
+      return false;
+    }
+    ip = r;
+    return true;
+  }
+  if (WiFi.hostByName(h, ip) != 1) {
+    Serial.printf("[mqtt] DNS gagal untuk %s\n", h);
     return false;
   }
-  Serial.printf("[mqtt] terhubung ke %s:%d sebagai %s\n", MQTT_HOST, MQTT_PORT, g_client_id);
+  return true;
+}
+
+static bool connectMqtt() {
+  IPAddress broker;
+  if (!resolveBroker(broker)) return false;
+  g_mqtt.setServer(broker, MQTT_PORT);
+
+  // LWT "0" retained QoS1: broker mengirimnya bila kacamata hilang tanpa disconnect.
+  if (!g_mqtt.connect(g_client_id, nullptr, nullptr, T_ONLINE, 1, true, "0", true)) {
+    Serial.printf("[mqtt] gagal connect ke %s (%s):%d (rc=%d)\n", MQTT_HOST, broker.toString().c_str(),
+                  MQTT_PORT, g_mqtt.state());
+    return false;
+  }
+  Serial.printf("[mqtt] terhubung ke %s (%s):%d sebagai %s\n", MQTT_HOST, broker.toString().c_str(), MQTT_PORT,
+                g_client_id);
   g_mqtt.subscribe(T_CMD, 1);
   g_mqtt.subscribe(T_CAM_SET, 1);
   g_mqtt.publish(T_ONLINE, "1", true);
@@ -117,6 +147,12 @@ static void netTask(void *) {
       Serial.printf("[wifi] terhubung %s, IP %s, RSSI %d\n", WIFI_SSID, WiFi.localIP().toString().c_str(),
                     WiFi.RSSI());
       Serial.printf("[wifi] stream: http://%s:%d/stream\n", WiFi.localIP().toString().c_str(), STREAM_PORT);
+      static bool mdns_started = false;
+      if (!mdns_started && MDNS.begin(MDNS_NAME)) {
+        MDNS.addService("http", "tcp", STREAM_PORT);
+        mdns_started = true;
+        Serial.printf("[wifi] mDNS: http://%s.local:%d/stream\n", MDNS_NAME, STREAM_PORT);
+      }
       was_connected = true;
       next_mqtt_try = 0;
     }
@@ -163,7 +199,6 @@ void mqtt_link::start() {
   uint8_t mac[6];
   WiFi.macAddress(mac);
   snprintf(g_client_id, sizeof(g_client_id), "glasses-%02x%02x%02x", mac[3], mac[4], mac[5]);
-  g_mqtt.setServer(MQTT_HOST, MQTT_PORT);
   g_mqtt.setCallback(onMessage);
   g_mqtt.setBufferSize(1024);  // camera/state ~400 byte
   g_mqtt.setKeepAlive(MQTT_KEEPALIVE_S);

@@ -1,7 +1,7 @@
 # Firmware kacamata Guardian (XIAO ESP32S3 Sense)
 
 Firmware ringan sesuai `../plan.md` bagian 5. ESP **hanya**:
-- menyajikan kamera sebagai MJPEG di `http://192.168.50.10:81/stream` (dan satu JPEG di `/capture`),
+- menyajikan kamera sebagai MJPEG di `http://guardian-glasses.local:81/stream` (dan satu JPEG di `/capture`),
 - mengirim heart rate, status, dan LWT lewat MQTT ke Mosquitto di Orange Pi,
 - menerima tuning parameter sensor kamera dari SBC.
 
@@ -27,7 +27,7 @@ Deteksi senjata, alarm, Telegram, dan zona ada di pocket device (`../sbc`).
 | Baterai | BAT+ → 100k → **GPIO4 (D3)** → 100k → GND (`BATTERY_ENABLED 0` jika belum dipasang) |
 
 ## Build & upload
-1. Isi `include/secrets.h` (password AP `guardian-ap` milik Orange Pi).
+1. Isi `include/secrets.h`: SSID/password Wi-Fi yang sama dengan Orange Pi (mis. Wi-Fi modem), `MQTT_HOST "guardian.local"`.
 2. `pio run -t upload`, lalu `pio device monitor` (115200). Setelah WiFi tersambung, alamat stream dicetak di serial.
 
 ## Kontrak MQTT (plan 4.2)
@@ -51,7 +51,7 @@ Catatan: PubSubClient hanya bisa publish QoS0. `online`/`camera/state` tetap ret
 ## Uji (milestone M1/M2)
 ```bash
 # M1: buka di browser laptop yang terhubung ke guardian-ap (target >= 10 fps QVGA)
-http://192.168.50.10:81/stream
+http://guardian-glasses.local:81/stream
 # M2 (di Orange Pi)
 mosquitto_sub -v -t 'glasses/#'
 mosquitto_pub -t glasses/camera/set -m '{"brightness":2,"vflip":1}'   # gambar berubah, bertahan setelah reboot

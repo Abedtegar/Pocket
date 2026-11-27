@@ -7,7 +7,7 @@ cd "$(dirname "$0")/.."
 echo "== paket sistem =="
 sudo apt-get update
 sudo apt-get install -y python3-venv python3-dev mosquitto mosquitto-clients alsa-utils i2c-tools \
-  libgpiod-dev gpiod
+  libgpiod-dev gpiod avahi-daemon libnss-mdns
 
 echo "== grup akses hardware =="
 for g in gpio i2c dialout audio; do
@@ -15,10 +15,14 @@ for g in gpio i2c dialout audio; do
   sudo usermod -aG "$g" "$USER"
 done
 
+echo "== hostname + mDNS (kacamata mencari broker di guardian.local) =="
+sudo hostnamectl set-hostname guardian
+sudo systemctl enable --now avahi-daemon
+
 echo "== mosquitto =="
 sudo install -m 644 deploy/mosquitto-guardian.conf /etc/mosquitto/conf.d/guardian.conf
 sudo systemctl enable --now mosquitto
-sudo systemctl restart mosquitto || echo "!! mosquitto gagal restart: pastikan wlan0 sudah 192.168.50.1 (AP) atau hapus listener kedua"
+sudo systemctl restart mosquitto
 
 echo "== venv + dependensi =="
 python3 -m venv .venv

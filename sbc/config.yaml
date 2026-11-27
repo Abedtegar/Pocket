@@ -6,7 +6,7 @@
 timezone: Asia/Jakarta
 
 glasses:
-  stream_url: http://192.168.50.10:81/stream
+  stream_url: http://guardian-glasses.local:81/stream   # mDNS; boleh diganti IP kacamata
   offline_timeout_s: 15
   startup_grace_s: 30      # jeda setelah boot sebelum "belum pernah online" dianggap offline
 

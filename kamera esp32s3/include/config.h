@@ -6,6 +6,11 @@
 
 #define FW_VERSION "2.0.0"
 
+// ------------------------------------------------------------------ mDNS
+// Kacamata dapat diakses sebagai http://guardian-glasses.local:81/stream
+// (juga dipakai sebagai hostname DHCP, sebagian modem ikut mendaftarkannya di DNS-nya).
+#define MDNS_NAME "guardian-glasses"
+
 // ------------------------------------------------------------- kamera / HTTP
 #define STREAM_PORT 81          // GET /stream (MJPEG), GET /capture (JPEG)
 // Frame buffer dialokasikan untuk resolusi terbesar yang boleh dipilih dari web

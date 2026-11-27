@@ -34,6 +34,7 @@ static void kedip(int n) {
 }
 
 static void mulaiWifi() {
+  WiFi.setHostname(MDNS_NAME);  // harus sebelum mode()/begin()
   WiFi.mode(WIFI_STA);
   WiFi.setSleep(false);  // tanpa ini stream tersendat karena modem power-save
   WiFi.setAutoReconnect(true);
