@@ -135,7 +135,7 @@ telegram:
 
 speaker:
   enabled: true
-  device: plughw:1,0       # VERIFIKASI dengan aplay -l
+  device: plughw:CARD=Device,DEV=0   # USB PnP Sound Device (pakai nama, nomor card bisa berubah)
   sounds_dir: sounds
 
 network:
