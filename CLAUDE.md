@@ -6,6 +6,14 @@ Rencana lengkap: `plan.md`. Isi folder:
   (hr, status, LWT, camera/set/state, cmd). Build: `pio run`. Kontrak MQTT di `kamera esp32s3/README.md` harus
   tetap cocok dengan `sbc/guardian/sensors/mqtt_client.py` dan `sbc/guardian/vision/camera_presets.py`.
 
+**Baca `docs/PROGRESS.md` dulu**: status terkini, keputusan yang menyimpang dari plan, dan langkah berikutnya.
+Pengembangan `sbc/` kini dilakukan langsung di Orange Pi (SSH). Firmware tetap di-build/upload dari laptop.
+Perbarui `docs/PROGRESS.md` setiap kali milestone maju atau keputusan baru diambil.
+
+## Jaringan (menyimpang dari plan.md bagian 3)
+Semua perangkat jadi klien Wi-Fi modem USB 4G (bukan AP Orange Pi). Alamat lewat mDNS: Orange Pi `guardian.local`
+(hostname `guardian`, avahi), kacamata `guardian-glasses.local`. Mosquitto listen `0.0.0.0:1883`.
+
 ## Aturan
 - Kerjakan per milestone (plan.md bagian 11). Keputusan di bagian 12 (K2–K14) **tanyakan ke user** dulu.
 - Target runtime: Orange Pi OS (Linux, Python ≥ 3.10). Kode hardware (gpiod, smbus2, serial, aplay) hanya jalan di sana;
