@@ -82,6 +82,10 @@ data primer ada.
 | Dataset (workspace/project/version) | Jumlah gambar | Kelas dipakai | Lisensi | URL |
 |---|---|---|---|---|
 | COCO 2017 val (negatif sulit) | ≤ 1.500 | – (label kosong) | CC BY 4.0 | https://cocodataset.org |
+| research-joczo/scissors-laii6/1 | 387 (145 asli) | ? | ? | https://universe.roboflow.com/research-joczo/scissors-laii6/dataset/1 |
+| sabbir-lpyav/machete/1 | 158 | ? | ? | https://universe.roboflow.com/sabbir-lpyav/machete/dataset/1 |
+| mbb-hrfxf/knife-detection-3wp7q/2 | ? | ? | ? | https://universe.roboflow.com/mbb-hrfxf/knife-detection-3wp7q/dataset/2 |
+| a-fadfk/machete-celurit/1 | 581 | Celurit | ? | https://universe.roboflow.com/a-fadfk/machete-celurit/dataset/1 |
 
 > YOLOv5 berlisensi AGPL-3.0: aman untuk riset/lomba, tinjau ulang bila dikomersialkan.
 > Dataset tidak disimpan di git, hanya di Google Drive.
