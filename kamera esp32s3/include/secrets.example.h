@@ -1,17 +1,18 @@
 #pragma once
 /*
  * Salin menjadi secrets.h lalu isi. secrets.h tidak ikut git.
- * Nilai default mengikuti plan.md bagian 3 (AP milik Orange Pi).
  */
 
-#define WIFI_SSID "guardian-ap"
-#define WIFI_PASS "ganti-dengan-password-ap"
+// Wi-Fi yang sama dengan Orange Pi (mis. Wi-Fi modem USB 4G)
+#define WIFI_SSID "nama-wifi"
+#define WIFI_PASS "password-wifi"
 
-#define MQTT_HOST "192.168.50.1"
+// Broker MQTT = Orange Pi. Nama mDNS (hostname Orange Pi + ".local"), nama DNS, atau IP.
+#define MQTT_HOST "guardian.local"
 #define MQTT_PORT 1883
 
-// IP statis kacamata. Kosongkan STATIC_IP untuk memakai DHCP
-// (maka SBC harus diberi tahu IP-nya lewat glasses.stream_url).
-#define STATIC_IP "192.168.50.10"
-#define STATIC_GATEWAY "192.168.50.1"
+// Kosong = DHCP (disarankan; kacamata dicari lewat guardian-glasses.local).
+// Isi hanya bila perlu IP tetap, dan harus satu subnet dengan Wi-Fi di atas.
+#define STATIC_IP ""
+#define STATIC_GATEWAY ""
 #define STATIC_SUBNET "255.255.255.0"
